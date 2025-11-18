@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
+
+
+
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--header-offset: 5rem; 
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+	scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.scroll-offset {
+	scroll-margin-top: var(--header-offset);
+}
+
+@layer components {
+  .nav__link {
+    @apply relative text-xl w-fit block after:block after:content-[''] font-semibold after:absolute after:h-[3px]
+    after:bg-yellow-400 text-white after:w-full after:scale-x-0 after:hover:scale-x-100 after:transition
+    after:duration-300 after:origin-right
+  }
+
+  .footer__heading {
+    @apply text-lg text-white font-bold mb-4
+  }
+  .footer__link
+  {
+    @apply text-sm text-white/60 hover:text-green-700 cursor-pointer mb-3 w-fit
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}

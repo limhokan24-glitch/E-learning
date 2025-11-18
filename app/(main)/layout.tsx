@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
-import "./globals.css";
+
+import Footer from '@/components/Home/Footer/Footer';
 import ResponsiveNav from "@/components/Home/Navbar/ResponsiveNav";
-import Footer from "@/components/Home/Footer/Footer";
 
 const font = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
@@ -19,10 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={font.className}>
+    <>
+      <body
+        className={font.className}
+      >
+        <ResponsiveNav />
         {children}
+        <Footer />
       </body>
-    </html>
+    </>
   );
 }
