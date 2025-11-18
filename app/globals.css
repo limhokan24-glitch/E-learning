@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+
+
+
+
+:root {
+	--header-offset: 5rem; 
+}
+
+html, body {
+	scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.scroll-offset {
+	scroll-margin-top: var(--header-offset);
+}
+
+@layer components {
+  .nav__link {
+    @apply relative text-xl w-fit block after:block after:content-[''] font-semibold after:absolute after:h-[3px]
+    after:bg-yellow-400 text-white after:w-full after:scale-x-0 after:hover:scale-x-100 after:transition
+    after:duration-300 after:origin-right
+  }
+
+  .footer__heading {
+    @apply text-lg text-white font-bold mb-4
+  }
+  .footer__link
+  {
+    @apply text-sm text-white/60 hover:text-green-700 cursor-pointer mb-3 w-fit
+  }
+}
+
