@@ -19,13 +19,13 @@ export default function AdminLessonPage() {
         <Image src="/logo.jpg" alt="Logo" width={50} height={50} />
 
         <nav className="flex space-x-6 text-sm">
-          <Link href="/admin-dashboard">Admin Dashboard</Link>
-          <Link href="/admin-lesson" className="font-semibold text-red-500">
+          <Link href="/admin/admin-dashboard">Admin Dashboard</Link>
+          <Link href="/admin/admin-lesson" className="font-semibold text-red-500">
             Lesson
           </Link>
-          <Link href="/quiz">Quiz</Link>
-          <Link href="/mock-exam">Mock Exam</Link>
-          <Link href="/subscription">Subscription</Link>
+          <Link href="/admin/admin-quiz">Quiz</Link>
+          <Link href="/admin/admin-mock-exam">Mock Exam</Link>
+          <Link href="/admin/admin-subscription">Subscription</Link>
         </nav>
 
         <form action="/api/auth/signout" method="post">

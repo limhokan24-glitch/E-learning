@@ -67,10 +67,10 @@ export default function AdminDashboard() {
           <Link href="/admin-dashboard" className="font-semibold text-red-500">
             Admin Dashboard
           </Link>
-          <Link href="/lesson">Lesson</Link>
-          <Link href="/quiz">Quiz</Link>
-          <Link href="/mock-exam">Mock Exam</Link>
-          <Link href="/subscription">Subscription</Link>
+          <Link href="/admin/admin-lesson">Lesson</Link>
+          <Link href="/admin/admin-quiz">Quiz</Link>
+          <Link href="/admin/admin-mock-exam">Mock Exam</Link>
+          <Link href="/admin/admin-subscription">Subscription</Link>
         </nav>
 
         <form action="/api/auth/signout" method="post">
