@@ -1,8 +1,8 @@
 "use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { Line } from "react-chartjs-2";
+import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   LineElement,
@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { getDashboardStats, getEnrollmentTrend, DashboardStats } from "@/src/services/adminservice";
 
 ChartJS.register(
   LineElement,
@@ -25,12 +26,38 @@ ChartJS.register(
 );
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalStudents: 0,
+    totalQuizzes: 0,
+    totalLessons: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load dashboard stats");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const enrollmentTrend = getEnrollmentTrend();
+
   const lineData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    labels: enrollmentTrend.labels,
     datasets: [
       {
         label: "New Students",
-        data: [80, 130, 180, 260, 330, 390],
+        data: enrollmentTrend.data,
         borderColor: "#C1282D",
         backgroundColor: "rgba(193, 40, 45, 0.08)",
         fill: true,
@@ -62,7 +89,6 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="flex justify-between items-center px-10 py-6 shadow-sm bg-white">
         <Image src="/logo.jpg" alt="Logo" width={50} height={50} />
-
         <nav className="flex space-x-6 text-sm">
           <Link href="/admin-dashboard" className="font-semibold text-red-500">
             Admin Dashboard
@@ -72,7 +98,6 @@ export default function AdminDashboard() {
           <Link href="/admin/admin-mock-exam">Mock Exam</Link>
           <Link href="/admin/admin-subscription">Subscription</Link>
         </nav>
-
         <form action="/api/auth/signout" method="post">
           <button className="bg-red-500 text-white px-4 py-2 rounded-full text-sm">
             Log out
@@ -92,12 +117,38 @@ export default function AdminDashboard() {
           </p>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6">
+            {error}
+          </div>
+        )}
+
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-10 justify-items-center">
-          <StatCard title="Total Student" value="10" iconSrc="/student-icon.png" />
-          <StatCard title="Total Quizzes" value="8" iconSrc="/idea-icon.png" />
-          <StatCard title="Total Lesson" value="7" iconSrc="/book-icon.png" />
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64 mt-10">
+            <p className="text-gray-500">Loading dashboard...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-10 justify-items-center">
+            <StatCard 
+              title="Total Student" 
+              value={stats.totalStudents.toString()} 
+              iconSrc="/student-icon.png" 
+            />
+            <StatCard 
+              title="Total Quizzes" 
+              value={stats.totalQuizzes.toString()} 
+              iconSrc="/idea-icon.png" 
+            />
+            <StatCard 
+              title="Total Lesson" 
+              value={stats.totalLessons.toString()} 
+              iconSrc="/book-icon.png" 
+            />
+          </div>
+        )}
 
         {/* Enrollment Chart */}
         <section className="mt-14 mb-16">
@@ -154,7 +205,6 @@ function StatCard({
           className="object-contain"
         />
       </div>
-
       <h4 className="text-[#1B1B3A] font-medium text-base mt-3">{title}</h4>
       <h2 className="text-[2rem] font-bold text-[#C1282D] mt-6">{value}</h2>
     </div>

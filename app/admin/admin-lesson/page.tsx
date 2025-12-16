@@ -3,35 +3,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import CreateLessonModal from "@/components/createlessonModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-const lessons = [
-  {
-    id: "1",
-    title: "French Colonial Era (1863–1953)",
-  },
-  {
-    id: "2",
-    title: "Sangkum Reastr Niyum Era (1953–1970)",
-  },
-  {
-    id: "3",
-    title: "Khmer Republic Era (1970–1975)",
-  },
-  {
-    id: "4",
-    title: "Democratic Kampuchea (Khmer Rouge Era) (1975–1979)",
-  },
-  {
-    id: "5",
-    title: "People’s Republic of Kampuchea (1979–1989)",
-  },
-];
+import { getAllLessons, Lesson } from "@/src/services/lessonservice"; // Import service
 
 export default function AdminLessonPage() {
   const [openModal, setOpenModal] = useState(false);
+  
+  // --- NEW: State for real data ---
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const router = useRouter();
+
+  // --- NEW: Fetch lessons on page load ---
+  const fetchLessons = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllLessons();
+      setLessons(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load lessons");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLessons();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
       {/* Header */}
@@ -90,37 +92,54 @@ export default function AdminLessonPage() {
                 <span>Create Lesson</span>
               </button>
 
-              {/* Modal */}
+              {/* Modal - Now refreshes list on success */}
               <CreateLessonModal
                 isOpen={openModal}
                 onClose={() => setOpenModal(false)}
-                onCreate={(data) => {
-                  console.log("Lesson created:", data);
+                onCreate={() => {
+                  setOpenModal(false);
+                  fetchLessons(); // Refresh list after create
                 }}
               />
             </div>
           </div>
 
+
           {/* Lesson list */}
           <div className="mt-8 space-y-5">
-            {lessons.map((lesson) => (
-              <div
-                key={lesson.id}
-                className="bg-white rounded-xl shadow flex items-center justify-between px-6 py-4 hover:shadow-md transition"
-              >
-                <span className="text-sm md:text-base text-[#1B1B3A]">
-                  {lesson.title}
-                </span>
-                <button
-                  onClick={() =>
-                    router.push(`/admin/admin-lesson/${lesson.id}`)
-                  }
-                  className="bg-red-500 text-white text-sm px-6 py-2 rounded-full hover:bg-red-600 transition"
+            {loading ? (
+              <p className="text-center text-gray-500">Loading lessons...</p>
+            ) : error ? (
+              <p className="text-center text-red-500">Error: {error}</p>
+            ) : lessons.length === 0 ? (
+              <p className="text-center text-gray-400">No lessons found. Create one!</p>
+            ) : (
+              lessons.map((lesson) => (
+                <div
+                  key={lesson.id}
+                  className="bg-white rounded-xl shadow flex items-center justify-between px-6 py-4 hover:shadow-md transition"
                 >
-                  Edit
-                </button>
-              </div>
-            ))}
+                  <div className="flex flex-col">
+                    <span className="text-sm md:text-base font-medium text-[#1B1B3A]">
+                      {lesson.title}
+                    </span>
+                    {/* Optional: Show module name if you want */}
+                    <span className="text-xs text-gray-400">
+                      {lesson.module}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() =>
+                      router.push(`/admin/admin-lesson/${lesson.id}`)
+                    }
+                    className="bg-red-500 text-white text-sm px-6 py-2 rounded-full hover:bg-red-600 transition"
+                  >
+                    Edit
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </main>
@@ -128,6 +147,7 @@ export default function AdminLessonPage() {
       {/* Footer */}
       <footer className="bg-[#C1282D] text-white text-center py-10 mt-auto">
         <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto shadow-md">
+           {/* Replaced logo-icon.png with logo.jpg as requested if icon missing, but kept your code */}
           <Image
             src="/logo-icon.png"
             alt="Logo"

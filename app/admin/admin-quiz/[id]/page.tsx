@@ -1,330 +1,285 @@
+// src/app/admin/admin-quiz/[id]/page.tsx
 "use client";
-
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, GripVertical, Plus, Pencil, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
-
-// --- Components for specific UI parts ---
-
-// 1. Custom Toggle Switch Component (for Settings Tab)
-const ToggleSwitch = ({ label, description, checked, onChange }: any) => (
-  <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
-    <div className="pr-4">
-      <h3 className="text-sm font-medium text-gray-900">{label}</h3>
-      <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-    </div>
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? "bg-red-500" : "bg-gray-200"
-      }`}
-    >
-      <span
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? "translate-x-5" : "translate-x-0"
-        }`}
-      />
-    </button>
-  </div>
-);
-
-// 2. Question Item Component (for Questions Tab)
-const QuestionItem = ({ number, question }: any) => {
-  return (
-    <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-4">
-      {/* Header Row */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <GripVertical className="text-gray-300 cursor-move" size={20} />
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold text-sm">
-            {number}
-          </span>
-          <div className="flex gap-2">
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md font-medium">
-              Multiple Choice
-            </span>
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md font-medium">
-              1 point
-            </span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button className="p-2 text-gray-400 hover:text-gray-600 transition">
-            <Pencil size={18} />
-          </button>
-          <button className="p-2 text-gray-400 hover:text-red-600 transition">
-            <Trash2 size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Question Text */}
-      <h3 className="text-base font-medium text-gray-900 mb-4 ml-11">
-        {question.title}
-      </h3>
-
-      {/* Options List */}
-      <div className="ml-11 space-y-2">
-        {question.options.map((opt: any, idx: number) => {
-          const letter = String.fromCharCode(65 + idx); // A, B, C...
-          const isCorrect = opt.correct;
-          return (
-            <div
-              key={idx}
-              className={`flex items-center px-4 py-3 rounded-lg text-sm ${
-                isCorrect
-                  ? "bg-green-50 border border-green-100 text-green-800"
-                  : "bg-gray-50 text-gray-700"
-              }`}
-            >
-              <span className="font-semibold mr-2">{letter}.</span>
-              <span className="flex-grow">{opt.text}</span>
-              {isCorrect && (
-                <span className="flex items-center text-green-600 text-xs font-bold">
-                  <CheckCircle2 size={14} className="mr-1" /> Correct
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Explanation (if exists) */}
-      {question.explanation && (
-        <div className="ml-11 mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800 flex gap-2 items-start">
-          <span className="font-bold shrink-0">Explanation:</span>
-          <p>{question.explanation}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// --- MAIN PAGE COMPONENT ---
-
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { FaArrowLeft, FaTrash, FaPen, FaCheckCircle, FaSave } from "react-icons/fa";
+import { getQuizById, updateQuiz, Quiz, Question } from "@/src/services/Quizservice";
+import AddQuestionModal from "@/components/AddQuestionModal"; // <--- IMPORT THE NEW MODAL
 
 export default function EditQuizPage() {
+  const { id } = useParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("questions"); // Defaulting to Questions to see result immediately
+  
+  const [activeTab, setActiveTab] = useState<"details" | "questions" | "settings">("details");
+  const [loading, setLoading] = useState(true);
+  const [quizData, setQuizData] = useState<Quiz | null>(null);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false); // <--- MODAL STATE
 
-  // Mock State for Settings
-  const [settings, setSettings] = useState({
-    shuffle: true,
-    showAnswers: true,
-    multipleAttempts: true,
-    passingScore: 70,
-  });
+  useEffect(() => {
+    if (id) fetchQuizData(id as string);
+  }, [id]);
 
-  // Mock Data for Questions
-  const questions = [
-    {
-      id: 1,
-      title: "When did Khmer Rouge begin?",
-      options: [
-        { text: "1975", correct: false },
-        { text: "1975", correct: true }, // Intentionally matching screenshot logic (Green B)
-        { text: "1941", correct: false },
-        { text: "1943", correct: false },
-      ],
-      explanation: "",
-    },
-    {
-      id: 2,
-      title: "Who was the leader of Khmer Rouge?",
-      options: [
-        { text: "Mussolini", correct: false },
-        { text: "Pol Pot", correct: true },
-        { text: "Stalin", correct: false },
-        { text: "Churchill", correct: false },
-      ],
-      explanation:
-        "Adolf Hitler was the Führer (leader) of Nazi Germany from 1934 to 1945.", // Matches your screenshot text (even if factually odd context for Pol Pot question)
-    },
-  ];
+  const fetchQuizData = async (quizId: string) => {
+    try {
+      const data = await getQuizById(quizId);
+      if (!data.settings) {
+        data.settings = { shuffleQuestions: false, showCorrectAnswers: true, allowMultipleAttempts: true };
+      }
+      if (!data.questions) data.questions = [];
+      setQuizData(data);
+    } catch (error) {
+      console.error("Error fetching quiz", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!quizData || !id) return;
+    try {
+      await updateQuiz(id as string, quizData);
+      alert("Changes saved successfully!");
+    } catch (error) {
+      alert("Error updating quiz");
+    }
+  };
+
+  // Called when "Add Question" inside the modal is clicked
+  const handleAddQuestionFromModal = (newQuestion: any) => {
+    if (!quizData) return;
+    setQuizData({
+      ...quizData,
+      questions: [...quizData.questions, newQuestion],
+    });
+    // Ensure we stay on the questions tab to see the new item
+    setActiveTab("questions"); 
+  };
+
+  if (loading) return <div className="p-10 text-center">Loading quiz data...</div>;
+  if (!quizData) return <div className="p-10 text-center">Quiz not found</div>;
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] p-6 sm:p-10 font-sans">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-black font-medium transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Quizzes
-          </button>
-          <button className="flex items-center bg-[#E13030] text-white px-5 py-2.5 rounded-lg hover:bg-red-700 transition font-medium shadow-sm">
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#F9F9F9] p-6 md:p-10 font-sans">
+      {/* Top Navigation Bar */}
+      <div className="flex justify-between items-center mb-8">
+        <Link href="/admin/admin-quiz" className="flex items-center text-gray-600 hover:text-black gap-2 font-medium transition">
+          <FaArrowLeft /> Back to Quizzes
+        </Link>
+        <button 
+          onClick={handleSave}
+          className="bg-[#E53E3E] text-white px-6 py-2.5 rounded shadow-sm hover:bg-red-700 transition flex items-center gap-2 font-semibold"
+        >
+           <FaSave /> Save Changes
+        </button>
+      </div>
 
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="bg-gray-100 p-1 rounded-full inline-flex">
-            {[
-              { id: "details", label: "Quiz Details" },
-              { id: "questions", label: `Questions (${questions.length})` },
-              { id: "settings", label: "Settings" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? "bg-white text-black shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      {/* Tabs Header */}
+      <div className="bg-transparent mb-4">
+        <div className="flex gap-4">
+            <TabButton label="Quiz Details" isActive={activeTab === "details"} onClick={() => setActiveTab("details")} />
+            <TabButton label={`Questions (${quizData.questions.length})`} isActive={activeTab === "questions"} onClick={() => setActiveTab("questions")} />
+            <TabButton label="Settings" isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
         </div>
+      </div>
 
-        {/* TAB CONTENT: QUIZ DETAILS */}
+      {/* Main Card Container */}
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
+        
+        {/* --- TAB 1: DETAILS --- */}
         {activeTab === "details" && (
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              Basic Information
-            </h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Configure quiz details and metadata
-            </p>
+          <div className="max-w-4xl">
+            <div className="mb-6">
+                <h3 className="text-xl font-bold text-[#1B1B3A]">Basic Information</h3>
+                <p className="text-gray-400 text-sm">Configure quiz details and metadata</p>
+            </div>
+
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quiz Title
-                </label>
-                <input
-                  type="text"
-                  defaultValue="Khmer Rouge - Multiple Choice"
-                  className="w-full bg-gray-100 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-red-500/20"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  defaultValue="Test your knowledge of Khmer Rouge"
-                  rows={3}
-                  className="w-full bg-gray-100 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-red-500/20 resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quiz Type
-                  </label>
-                  <select className="w-full bg-gray-100 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-red-500/20">
-                    <option>Multiple Choice</option>
-                    <option>True/False</option>
-                  </select>
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">Quiz Title</label>
+                    <input
+                        type="text"
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                        value={quizData.title}
+                        onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
+                    />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time Limit (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue="15"
-                    className="w-full bg-gray-100 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-red-500/20"
-                  />
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">Description</label>
+                    <textarea
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg h-32 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        value={quizData.description || ""}
+                        onChange={(e) => setQuizData({ ...quizData, description: e.target.value })}
+                    />
                 </div>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Module</label>
+                        <input
+                        type="text"
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                        value={quizData.module}
+                        onChange={(e) => setQuizData({ ...quizData, module: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Time Limit (minutes)</label>
+                        <input
+                        type="number"
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                        value={quizData.timeLimit || 15}
+                        onChange={(e) => setQuizData({ ...quizData, timeLimit: parseInt(e.target.value) })}
+                        />
+                    </div>
+                </div>
             </div>
           </div>
         )}
 
-        {/* TAB CONTENT: QUESTIONS */}
+        {/* --- TAB 2: QUESTIONS --- */}
         {activeTab === "questions" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-end mb-8">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Quiz Questions
-                </h2>
-                <p className="text-gray-500 text-sm">
-                  Total Points: {questions.length}
-                </p>
+                <h3 className="text-xl font-bold text-[#1B1B3A]">Quiz Questions</h3>
+                <p className="text-gray-400 text-sm">Total Points: {quizData.questions.length}</p>
               </div>
-              <button className="flex items-center text-sm font-medium text-white bg-[#E13030] px-4 py-2 rounded-lg hover:bg-red-700 transition">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Question
+              <button 
+                onClick={() => setIsQuestionModalOpen(true)} // <--- OPENS MODAL
+                className="bg-[#E53E3E] text-white px-5 py-2 rounded-lg shadow hover:bg-red-700 transition font-medium flex items-center gap-2"
+              >
+                + Add Question
               </button>
             </div>
 
-            <div>
-              {questions.map((q, index) => (
-                <QuestionItem key={q.id} number={index + 1} question={q} />
+
+            <div className="space-y-6">
+              {quizData.questions.map((q, qIndex) => (
+                <div key={qIndex} className="border border-gray-200 rounded-xl p-6 relative hover:border-red-200 transition bg-white">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-full font-bold text-sm">
+                            {qIndex + 1}
+                        </div>
+                        <span className="bg-gray-100 text-xs font-semibold px-3 py-1 rounded-full text-gray-600">Multiple Choice</span>
+                        {/* Display Points if available, defaulting to 1 */}
+                        <span className="bg-gray-100 text-xs font-semibold px-3 py-1 rounded-full text-gray-600">{(q as any).points || 1} point</span>
+                    </div>
+                    <div className="flex gap-3 text-gray-400">
+                      <FaPen className="cursor-pointer hover:text-gray-600 transition" />
+                      <FaTrash 
+                        className="cursor-pointer hover:text-red-500 transition" 
+                        onClick={() => {
+                           const newQuestions = [...quizData.questions];
+                           newQuestions.splice(qIndex, 1);
+                           setQuizData({...quizData, questions: newQuestions});
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="font-semibold text-gray-800 mb-4 text-lg">{q.questionText}</p>
+
+                  <div className="space-y-3 pl-2">
+                    {q.options.map((opt, oIndex) => {
+                      const isCorrect = q.correctAnswerIndex === oIndex;
+                      return (
+                        <div 
+                          key={oIndex} 
+                          className={`p-3 rounded-lg border flex items-center justify-between text-sm ${
+                            isCorrect ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-600'
+                          }`}
+                        >
+                          <span className="font-medium">{String.fromCharCode(65 + oIndex)}. {opt}</span>
+                          {isCorrect && <span className="text-xs font-bold flex items-center gap-1"><FaCheckCircle /> Correct</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Show explanation if it exists */}
+                  {q.explanation && (
+                     <div className="mt-4 bg-blue-50 p-3 rounded text-xs text-blue-800">
+                        <span className="font-bold">Explanation:</span> {q.explanation}
+                     </div>
+                  )}
+                </div>
               ))}
+              
+              {quizData.questions.length === 0 && (
+                  <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                      No questions yet. Click "Add Question" to start.
+                  </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB CONTENT: SETTINGS */}
+
+        {/* --- TAB 3: SETTINGS --- */}
         {activeTab === "settings" && (
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              Quiz Settings
-            </h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Configure how students will experience this quiz
-            </p>
-
-            <div className="space-y-2">
-              <ToggleSwitch
-                label="Shuffle Questions"
-                description="Randomize question order for each attempt"
-                checked={settings.shuffle}
-                onChange={(v: boolean) =>
-                  setSettings({ ...settings, shuffle: v })
-                }
+          <div className="max-w-3xl">
+             <div className="mb-6">
+                <h3 className="text-xl font-bold text-[#1B1B3A]">Quiz Settings</h3>
+                <p className="text-gray-400 text-sm">Configure how students will experience this quiz</p>
+            </div>
+            <div className="space-y-8 bg-white">
+              <ToggleRow 
+                label="Shuffle Questions" 
+                desc="Randomize question order for each attempt"
+                checked={quizData.settings?.shuffleQuestions || false}
+                onChange={(val) => setQuizData({ ...quizData, settings: { ...quizData.settings!, shuffleQuestions: val }})}
               />
-              <ToggleSwitch
-                label="Show Correct Answers"
-                description="Display correct answers after submission"
-                checked={settings.showAnswers}
-                onChange={(v: boolean) =>
-                  setSettings({ ...settings, showAnswers: v })
-                }
+              <ToggleRow 
+                label="Show Correct Answers" 
+                desc="Display correct answers after submission"
+                checked={quizData.settings?.showCorrectAnswers || false}
+                onChange={(val) => setQuizData({ ...quizData, settings: { ...quizData.settings!, showCorrectAnswers: val }})}
               />
-              <ToggleSwitch
-                label="Allow Multiple Attempts"
-                description="Let students retake the quiz"
-                checked={settings.multipleAttempts}
-                onChange={(v: boolean) =>
-                  setSettings({ ...settings, multipleAttempts: v })
-                }
+              <ToggleRow 
+                label="Allow Multiple Attempts" 
+                desc="Let students retake the quiz"
+                checked={quizData.settings?.allowMultipleAttempts || false}
+                onChange={(val) => setQuizData({ ...quizData, settings: { ...quizData.settings!, allowMultipleAttempts: val }})}
               />
-
-
-              <div className="pt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Passing Score (%)
-                </label>
-                <input
-                  type="number"
-                  value={settings.passingScore}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      passingScore: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-gray-100 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-red-500/20"
-                />
+              <div className="pt-4 border-t border-gray-100">
+                 <label className="block text-sm font-semibold mb-2 text-gray-700">Passing Score (%)</label>
+                 <input 
+                    type="number" 
+                    className="w-full max-w-xs p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+                    value={quizData.passingScore || 70}
+                    onChange={(e) => setQuizData({ ...quizData, passingScore: Number(e.target.value) })}
+                 />
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* --- RENDER THE ADD QUESTION MODAL --- */}
+      <AddQuestionModal 
+        isOpen={isQuestionModalOpen} 
+        onClose={() => setIsQuestionModalOpen(false)} 
+        onAdd={handleAddQuestionFromModal} 
+      />
+
     </div>
   );
+}
+
+// Subcomponents
+function TabButton({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${isActive ? "bg-white text-gray-900 shadow-sm border border-gray-200" : "text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-100"}`}>{label}</button>
+  );
+}
+
+function ToggleRow({ label, desc, checked, onChange }: { label: string, desc: string, checked: boolean, onChange: (val: boolean) => void }) {
+  return (
+    <div className="flex justify-between items-center group">
+      <div><h4 className="font-semibold text-gray-800">{label}</h4><p className="text-xs text-gray-400">{desc}</p></div>
+      <div className={`w-14 h-7 rounded-full cursor-pointer p-1 transition-colors duration-300 ${checked ? 'bg-[#E53E3E]' : 'bg-gray-300'}`} onClick={() => onChange(!checked)}><div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${checked ? 'translate-x-7' : 'translate-x-0'}`} /></div>
+    </div>
+  )
 }

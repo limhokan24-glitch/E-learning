@@ -1,7 +1,6 @@
+// src/components/AddQuestionModal.tsx
 "use client";
-
-import { X } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface AddQuestionModalProps {
   isOpen: boolean;
@@ -9,159 +8,147 @@ interface AddQuestionModalProps {
   onAdd: (question: any) => void;
 }
 
-export default function AddQuestionModal({
-  isOpen,
-  onClose,
-  onAdd,
-}: AddQuestionModalProps) {
-  const [question, setQuestion] = useState("");
+export default function AddQuestionModal({ isOpen, onClose, onAdd }: AddQuestionModalProps) {
+  const [questionText, setQuestionText] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
-  const [correctIndex, setCorrectIndex] = useState<number | null>(null);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(null);
   const [points, setPoints] = useState(1);
   const [explanation, setExplanation] = useState("");
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-black">
-              Add New Question
-            </h2>
-            <p className="text-sm text-gray-500">
-              Create a new question for this quiz
-            </p>
-          </div>
-          <button onClick={onClose}>
-            <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-          </button>
-        </div>
+  const handleOptionChange = (index: number, value: string) => {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
 
-        {/* Form */}
-        <div className="mt-6 space-y-4">
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!questionText || correctAnswerIndex === null || options.some((opt) => !opt)) {
+      alert("Please fill in the question, all options, and select a correct answer.");
+      return;
+    }
+
+    const newQuestion = {
+      questionText,
+      options,
+      correctAnswerIndex,
+      points,
+      explanation,
+      type: "Multiple Choice", // Hardcoded based on image
+    };
+
+    onAdd(newQuestion);
+    
+    // Reset form
+    setQuestionText("");
+    setOptions(["", "", "", ""]);
+    setCorrectAnswerIndex(null);
+    setPoints(1);
+    setExplanation("");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-1">
+          <h2 className="text-xl font-bold text-[#1B1B3A]">Add New Question</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">Create a new question for this quiz</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Question Type */}
           <div>
-            <label className="text-black block text-sm font-medium mb-1 text-left">
-              Question Type
-            </label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Question Type</label>
+            <div className="w-full p-3 bg-gray-100 border border-transparent rounded-lg text-gray-700">
+              Multiple Choice
+            </div>
+          </div>
+
+          {/* Question Input */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Question</label>
             <input
-              placeholder="Multiple Choice"
-              
-              className="text-black w-full rounded-lg bg-gray-50 px-4 py-3 text-sm"
+              type="text"
+              placeholder="Enter your question here..."
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
             />
           </div>
 
-          {/* Question */}
-          <div>
-            <label className="text-black block text-sm font-medium mb-1 text-left">
-              Question
-            </label>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Enter your question here..."
-              rows={2}
-              className=" text-black w-full rounded-lg bg-gray-50 px-4 py-3 text-sm
-              placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
 
           {/* Answer Options */}
           <div>
-            <label className="text-black block text-sm font-medium mb-2 text-left">
-              Answer Options
-            </label>
-
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Answer Options</label>
             <div className="space-y-3">
-              {options.map((opt, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  {/* Radio dot */}
+              {options.map((opt, index) => (
+                <div key={index} className="flex items-center gap-3">
                   <input
                     type="radio"
-                    name="correct"
-                    checked={correctIndex === i}
-                    onChange={() => setCorrectIndex(i)}
-                    className="accent-red-500"
+                    name="correctAnswer"
+                    checked={correctAnswerIndex === index}
+                    onChange={() => setCorrectAnswerIndex(index)}
+                    className="w-5 h-5 text-red-600 focus:ring-red-500 border-gray-300"
+                    title="Select as correct answer"
                   />
-
-                  {/* Option input */}
                   <input
                     type="text"
+                    placeholder={`Option ${String.fromCharCode(65 + index)}`} // Option A, B, C...
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
                     value={opt}
-                    onChange={(e) => {
-                      const copy = [...options];
-                      copy[i] = e.target.value;
-                      setOptions(copy);
-                    }}
-                    placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                    className="w-full rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    onChange={(e) => handleOptionChange(index, e.target.value)}
                   />
                 </div>
               ))}
             </div>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Select the correct answer
-            </p>
+            <p className="text-xs text-gray-400 mt-2 ml-1">Select the correct answer via the radio button</p>
           </div>
 
           {/* Points */}
           <div>
-            <label className="text-black block text-sm font-medium mb-1 text-left">
-              Points
-            </label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Points</label>
             <input
               type="number"
+              min="1"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
               value={points}
               onChange={(e) => setPoints(Number(e.target.value))}
-              className="text-black w-full rounded-lg bg-gray-50 px-4 py-3 text-sm"
             />
           </div>
 
           {/* Explanation */}
           <div>
-            <label className="text-black block text-sm font-medium mb-1 text-left">
-              Explanation (Optional)
-            </label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Explanation (Optional)</label>
             <textarea
+              rows={3}
+              placeholder="Provide an explanation for the correct answer..."
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
-              placeholder="Provide an explanation for the correct answer..."
-              rows={2}
-              className=" text-black w-full rounded-lg bg-gray-50 px-4 py-3 text-sm
-              placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="mt-6 flex justify-between">
-          <button
-            onClick={onClose}
-            className="rounded-lg border px-6 py-2 text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onAdd({
-                question,
-                options,
-                correctIndex,
-                points,
-                explanation,
-              });
-              onClose();
-            }}
-            className="rounded-lg bg-red-600 px-6 py-2 text-sm text-white hover:bg-red-700"
-          >
-            Add Question
-          </button>
-        </div>
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-3 bg-[#E53E3E] text-white rounded-lg font-medium hover:bg-red-700 transition"
+            >
+              Add Question
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
