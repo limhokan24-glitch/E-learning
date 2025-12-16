@@ -1,8 +1,7 @@
 "use client";
 import TopNav from "@/components/TopNav";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -41,52 +40,8 @@ export default function ProgressPage() {
   const [lineChartData, setLineChartData] = useState<any>({ labels: [], datasets: [] });
   const [barChartData, setBarChartData] = useState<any>({ labels: [], datasets: [] });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const token = await user.getIdToken();
-          await fetchProgressData(token);
-        } catch (error) {
-          console.error("Error getting token:", error);
-        }
-      } else {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const fetchProgressData = async (token: string) => {
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const baseUrl = "https://backend-rauth.vercel.app/api/progress";
-
-      // Parallel Fetch: Exams, Quizzes, and TIME
-      const [examRes, quizRes, timeRes] = await Promise.all([
-        fetch(`${baseUrl}/exam/all`, { headers }),
-        fetch(`${baseUrl}/quiz/all`, { headers }),
-        fetch(`${baseUrl}/time`, { headers }), // Fetching the tracker data
-      ]);
-
-      const examData = await examRes.json();
-      const quizData = await quizRes.json();
-      const timeData = await timeRes.json();
-
-      processLineChart(examData, quizData);
-      processTimeData(timeData);
-      
-      setExamAttempts(examData);
-      setQuizCount(quizData.length || 0);
-      setLoading(false);
-    } catch (error) {
-      console.error("Failed to fetch progress:", error);
-      setLoading(false);
-    }
-  };
-
   // --- 1. Process Scores for Line Chart ---
-  const processLineChart = (exams: any[], quizzes: any[]) => {
+  const processLineChart = useCallback((exams: any[], quizzes: any[]) => {
     const combined = [
       ...exams.map(e => ({ ...e, type: 'Exam' })),
       ...quizzes.map(q => ({ ...q, type: 'Quiz' }))
@@ -122,10 +77,10 @@ export default function ProgressPage() {
         },
       ],
     });
-  };
+  }, []);
 
   // --- 2. Process Time for Bar Chart & Total ---
-  const processTimeData = (timeData: any[]) => {
+  const processTimeData = useCallback((timeData: any[]) => {
     // A. Calculate Total Hours
     const totalSeconds = timeData.reduce((acc: number, curr: any) => acc + (curr.seconds || 0), 0);
     const hours = Math.round((totalSeconds / 3600) * 10) / 10;
@@ -137,33 +92,81 @@ export default function ProgressPage() {
     const last7DaysLabels = [];
     const last7DaysValues = [];
 
-
     for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(today.getDate() - i);
-        const dateString = d.toISOString().split('T')[0]; // "2023-10-28"
-        const dayName = days[d.getDay()];
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateString = d.toISOString().split('T')[0]; // "2023-10-28"
+      const dayName = days[d.getDay()];
 
-        // Find data for this specific date
-        const dayData = timeData.find((item: any) => item.date === dateString);
-        const dayHours = dayData ? Math.round((dayData.seconds / 3600) * 10) / 10 : 0;
+      // Find data for this specific date
+      const dayData = timeData.find((item: any) => item.date === dateString);
+      const dayHours = dayData ? Math.round((dayData.seconds / 3600) * 10) / 10 : 0;
 
-        last7DaysLabels.push(dayName);
-        last7DaysValues.push(dayHours);
+      last7DaysLabels.push(dayName);
+      last7DaysValues.push(dayHours);
     }
 
     setBarChartData({
-        labels: last7DaysLabels,
-        datasets: [
-          {
-            label: "Hours Studied",
-            data: last7DaysValues,
-            backgroundColor: "#C1282D",
-            borderRadius: 6,
-          },
-        ],
+      labels: last7DaysLabels,
+      datasets: [
+        {
+          label: "Hours Studied",
+          data: last7DaysValues,
+          backgroundColor: "#C1282D",
+          borderRadius: 6,
+        },
+      ],
     });
-  };
+  }, []);
+
+  const fetchProgressData = useCallback(
+    async (token: string) => {
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const baseUrl = "https://backend-rauth.vercel.app/api/progress";
+
+        const [examRes, quizRes, timeRes] = await Promise.all([
+          fetch(`${baseUrl}/exam/all`, { headers }),
+          fetch(`${baseUrl}/quiz/all`, { headers }),
+          fetch(`${baseUrl}/time`, { headers }),
+        ]);
+
+        const examData = await examRes.json();
+        const quizData = await quizRes.json();
+        const timeData = await timeRes.json();
+
+
+        processLineChart(examData, quizData);
+        processTimeData(timeData);
+
+        setExamAttempts(examData);
+        setQuizCount(quizData.length || 0);
+      } catch (error) {
+        console.error("Failed to fetch progress:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [processLineChart, processTimeData]
+  );
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          await fetchProgressData(token);
+        } catch (error) {
+          console.error("Error getting token:", error);
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [fetchProgressData]);
 
   const chartOptions = {
     responsive: true,
@@ -179,7 +182,6 @@ export default function ProgressPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
       <TopNav />
-
       <main className="flex-grow px-10 mt-12">
         <h2 className="text-xl font-bold text-[#1B1B3A]">My <span className="text-red-600">Progress</span></h2>
         <p className="text-sm text-gray-500 mt-1">Track your learning journey and performance</p>
@@ -188,7 +190,6 @@ export default function ProgressPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 mt-16 justify-items-center">
           <Card title="Exams Taken" value={examAttempts.length.toString()} iconSrc="/book-icon.png" />
           <Card title="Quizzes Taken" value={quizCount.toString()} iconSrc="/idea-icon.png" />
-          {/* ✅ REAL DATA: Total Study Hours */}
           <Card title="Study Time" value={totalStudyHours} iconSrc="/clock-icon.png" />
         </div>
 
@@ -197,7 +198,7 @@ export default function ProgressPage() {
           <h3 className="text-md font-semibold text-[#1B1B3A]">Score Progression</h3>
           <div className="bg-white p-6 rounded-xl shadow min-h-[300px]">
             {lineChartData.labels.length > 0 ? (
-                <Line data={lineChartData} options={chartOptions} height={100} />
+              <Line data={lineChartData} options={chartOptions} height={100} />
             ) : <div className="text-center text-gray-400 py-10">No scores recorded yet.</div>}
           </div>
         </section>
@@ -206,7 +207,6 @@ export default function ProgressPage() {
         <section className="mt-14 mb-12">
           <h3 className="text-md font-semibold text-[#1B1B3A]">Daily Study Activity</h3>
           <div className="bg-white p-6 rounded-xl shadow">
-            {/* ✅ REAL DATA: Daily Bars */}
             <Bar data={barChartData} options={chartOptions} height={100} />
           </div>
         </section>
@@ -222,14 +222,13 @@ export default function ProgressPage() {
   );
 }
 
-
 function Card({ title, value, iconSrc }: any) {
   return (
     <div className="relative bg-white w-[320px] h-[230px] p-12 pt-16 rounded-2xl shadow-lg text-center hover:shadow-2xl transition">
       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#C1282D] w-16 h-16 rounded-full flex items-center justify-center shadow-md">
-         <div className="text-white text-2xl">
-            {title.includes("Exams") ? "📚" : title.includes("Quiz") ? "💡" : "⏳"}
-         </div>
+        <div className="text-white text-2xl">
+          {title.includes("Exams") ? "📚" : title.includes("Quiz") ? "💡" : "⏳"}
+        </div>
       </div>
       <h4 className="text-[#1B1B3A] font-medium text-base mt-3">{title}</h4>
       <h2 className="text-[2rem] font-bold text-[#C1282D] mt-6">{value}</h2>

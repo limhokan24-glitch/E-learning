@@ -182,7 +182,7 @@ export default function CreateMockExamModal({
               { l: "Timer Visibility", checked: true }, 
               { l: "Randomize Questions", checked: false }, 
               { l: "Allow Retakes", checked: true }
-            ].map((item, idx) => (
+            ].map((item) => (
               <div key={item.l} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
                 <span className="text-gray-700 font-medium text-sm">{item.l}</span>
                 {/* Visual Toggle */}

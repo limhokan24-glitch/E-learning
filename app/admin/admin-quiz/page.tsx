@@ -35,6 +35,7 @@ export default function AdminQuizPage() {
         await deleteQuiz(id);
         setQuizzes((prev) => prev.filter((q) => q.id !== id));
       } catch (error) {
+        console.log(error);
         alert("Error deleting quiz");
       }
     }

@@ -77,7 +77,7 @@ export default function CreateQuizModal({ isOpen, onClose, onSuccess }: CreateQu
     }
 
     // Capture any data currently in the inputs if the user forgot to click "Add"
-    let finalQuestions = [...questions];
+    const finalQuestions = [...questions];
     const isFormDirty = currentQuestion || options.some(o => o) || explanation;
     
     if (isFormDirty) {

@@ -1,7 +1,6 @@
 "use client";
-
 import Image from "next/image";
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { auth } from "@/firebase/firebaseClient"; 
 import {
@@ -9,7 +8,7 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const formType = searchParams.get("type");
   const router = useRouter();
@@ -39,29 +38,27 @@ export default function LoginPage() {
         // Get Token to read database
         const token = await user.getIdToken();
 
-        // 🛑 FETCH REAL DATABASE ROLE (More reliable than claims)
-        // This ensures if you manually edited the DB, it works immediately.
+        // 🛑 FETCH REAL DATABASE ROLE
         const res = await fetch("https://backend-rauth.vercel.app/api/auth/profile", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
         });
 
         if (res.ok) {
-            const data = await res.json();
-            console.log("User Profile from DB:", data);
-            
-            // Check the 'Role' field exactly as it appears in Firestore
-            if (data.Role === "Admin") {
-                router.push("/admin/admin-dashboard");
-            } else {
-                router.push("/overview");
-            }
+          const data = await res.json();
+          console.log("User Profile from DB:", data);
+          
+          // Check the 'Role' field exactly as it appears in Firestore
+          if (data.Role === "Admin") {
+            router.push("/admin/admin-dashboard");
+          } else {
+            router.push("/overview");
+          }
         } else {
-            console.error("Could not fetch user profile to check role.");
-            router.push("/overview"); // Fallback
+          console.error("Could not fetch user profile to check role.");
+          router.push("/overview"); // Fallback
         }
-
       } else {
         // 🆕 REGISTER FLOW
         if (password !== confirmPassword) {
@@ -87,8 +84,6 @@ export default function LoginPage() {
           body: JSON.stringify({
             username: username,
             email: email,
-            // If your backend supports fullName, add it here:
-            // fullName: fullName 
           }),
         });
 
@@ -119,12 +114,12 @@ export default function LoginPage() {
           />
         </div>
 
-
         {/* Right Side - Form Section */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-center text-gray-800 text-lg mb-6 font-medium">
             {isLogin ? "Welcome Back" : "Start Learning Today"}
           </h2>
+
 
           {/* Toggle Buttons */}
           <div className="flex justify-center mb-6 space-x-3">
@@ -164,7 +159,6 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm mb-1">Username</label>
                   <input
@@ -217,7 +211,6 @@ export default function LoginPage() {
               </div>
             )}
 
-
             <button
               type="submit"
               disabled={loading}
@@ -229,5 +222,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

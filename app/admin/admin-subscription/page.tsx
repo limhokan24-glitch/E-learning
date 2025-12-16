@@ -308,6 +308,7 @@ const formatDate = (dateInput: any) => {
     // 2. Handle ISO String or Date Object
     return new Date(dateInput).toLocaleDateString();
   } catch (e) {
+    console.log(e);
     return "Invalid Date";
   }
 };
@@ -473,7 +474,7 @@ const getStatusConfig = (role: string) => {
           
           {filteredStudents.length === 0 && (
             <div className="text-center py-12 text-gray-400">
-              <p>No students found matching "{searchTerm}"</p>
+              <p>{`No students found matching ${searchTerm}`}</p>
             </div>
           )}
         </div>

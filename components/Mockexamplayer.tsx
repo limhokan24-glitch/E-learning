@@ -29,8 +29,16 @@ type AnswerRecord = {
 };
 
 export default function MockExamPlayer({ exam }: { exam: MockExam }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
+   const calculatedDuration = exam.duration || Math.ceil(exam.questions.length * 1.5);
+  const totalSeconds = calculatedDuration * 60;
+  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+  const [history, setHistory] = useState<AnswerRecord[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-
   // Safety Check: If no questions exist, show a clear error
   if (!exam.questions || exam.questions.length === 0) {
     return (
@@ -39,17 +47,7 @@ export default function MockExamPlayer({ exam }: { exam: MockExam }) {
       </div>
     );
   }
-
-  const calculatedDuration = exam.duration || Math.ceil(exam.questions.length * 1.5);
-  const totalSeconds = calculatedDuration * 60;
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
-  const [score, setScore] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
-  const [history, setHistory] = useState<AnswerRecord[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  
 
   useEffect(() => {
     if (isFinished) return;

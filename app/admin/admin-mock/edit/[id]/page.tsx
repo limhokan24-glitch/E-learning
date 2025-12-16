@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
-import { FaArrowLeft, FaSave, FaEdit, FaTrash } from "react-icons/fa";
+import { useParams } from "next/navigation";
+import { FaArrowLeft, FaEdit, FaTrash } from "react-icons/fa";
 import { Loader2 } from "lucide-react";
 import { auth } from "@/firebase/firebaseClient"; 
 
@@ -11,7 +11,6 @@ import { auth } from "@/firebase/firebaseClient";
 const BASE_URL = "https://backend-rauth.vercel.app";
 
 export default function EditMockExamPage() {
-  const router = useRouter();
   const params = useParams();
   const examId = params?.id as string;
 

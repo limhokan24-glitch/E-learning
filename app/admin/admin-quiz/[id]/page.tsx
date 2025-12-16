@@ -1,15 +1,15 @@
 // src/app/admin/admin-quiz/[id]/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { FaArrowLeft, FaTrash, FaPen, FaCheckCircle, FaSave } from "react-icons/fa";
-import { getQuizById, updateQuiz, Quiz, Question } from "@/src/services/Quizservice";
+import { getQuizById, updateQuiz, Quiz} from "@/src/services/Quizservice";
 import AddQuestionModal from "@/components/AddQuestionModal"; // <--- IMPORT THE NEW MODAL
 
 export default function EditQuizPage() {
   const { id } = useParams();
-  const router = useRouter();
+  
   
   const [activeTab, setActiveTab] = useState<"details" | "questions" | "settings">("details");
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,7 @@ export default function EditQuizPage() {
       await updateQuiz(id as string, quizData);
       alert("Changes saved successfully!");
     } catch (error) {
+        console.log(error);
       alert("Error updating quiz");
     }
   };
@@ -209,7 +210,7 @@ export default function EditQuizPage() {
               
               {quizData.questions.length === 0 && (
                   <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                      No questions yet. Click "Add Question" to start.
+                      {'No questions yet. Click "Add Question" to start.'}
                   </div>
               )}
             </div>

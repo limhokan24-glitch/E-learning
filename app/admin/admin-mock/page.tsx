@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FaTrashAlt, FaPlus, FaInfoCircle } from "react-icons/fa"; // FontAwesome icons
+import { FaTrashAlt, FaPlus } from "react-icons/fa"; // FontAwesome icons
 import { Loader2 } from "lucide-react"; // Loading spinner
 import CreateMockExamModal from "@/components/CreateMockExamModal"; // Your existing modal
 import { auth } from "@/firebase/firebaseClient"; // Firebase Auth for token

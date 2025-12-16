@@ -28,7 +28,7 @@ export default async function MockExamDetails({ params }: { params: Promise<{ id
         </div>
         <h1 className="text-xl font-bold text-gray-800 mb-2">Exam Not Found</h1>
         <p className="text-gray-500 mb-6 max-w-xs mx-auto">
-          We couldn't locate the exam ID you are looking for. It may have been deleted.
+          {'We couldnt locate the exam ID you are looking for. It may have been deleted.'}
         </p>
         <Link href="/mock-exam">
           <button className="px-8 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition">

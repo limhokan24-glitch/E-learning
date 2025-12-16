@@ -8,7 +8,7 @@ interface MockExam {
   questions: any[];
   createdAt?: string; // Optional because old data might miss it
 }
-
+export const dynamic = 'force-dynamic';
 async function getMockExams(): Promise<MockExam[]> {
   try {
     const res = await fetch("https://backend-rauth.vercel.app/api/mockexams", {

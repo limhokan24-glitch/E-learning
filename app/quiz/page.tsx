@@ -7,7 +7,7 @@ interface Quiz {
   module: string;
   questions: any[];
 }
-
+export const dynamic = 'force-dynamic';
 // Fetch quizzes from your backend
 async function getQuizzes(): Promise<Quiz[]> {
   try {
