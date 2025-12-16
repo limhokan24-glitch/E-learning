@@ -9,7 +9,6 @@ interface Lesson {
   description: string;
   order: number;
 }
-
 // Fetch data on the server
 async function getLessons(): Promise<Lesson[]> {
   try {
@@ -27,7 +26,7 @@ async function getLessons(): Promise<Lesson[]> {
     return [];
   }
 }
-
+export const dynamic = 'force-dynamic';
 export default async function LessonListPage() {
   const lessons = await getLessons();
   const validLessons = Array.isArray(lessons) ? lessons : [];
