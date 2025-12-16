@@ -2,116 +2,264 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { 
+  ArrowLeft, 
+  Save, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  UploadCloud,
+  X 
+} from "lucide-react";
 
-export default function EditMockExamQuestionsPage({
+// Mock Data Type
+type SubLesson = {
+  id: number;
+  title: string;
+  parentLesson: string;
+  description: string;
+};
+
+export default function EditLessonPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const [activeTab, setActiveTab] = useState<"details" | "questions" | "settings">(
-    "questions"
-  );
+  // VIEW STATE: 'main' (tabs) or 'edit-sublesson' (focused view)
+  const [view, setView] = useState<"main" | "edit-sublesson">("main");
+  const [activeTab, setActiveTab] = useState<"details" | "lessons">("lessons"); // Defaulted to lessons to see button easier
+
+  // MODAL STATE
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // MAIN LESSON STATE
+  const [lessonTitle, setLessonTitle] = useState("French Colonial Era (1863–1953)");
+  const [lessonDescription, setLessonDescription] = useState("");
+
+  // SUB-LESSON STATE
+  const [currentSubLesson, setCurrentSubLesson] = useState<SubLesson | null>(null);
+  const [subLessons, setSubLessons] = useState<SubLesson[]>([
+    { 
+      id: 1, 
+      title: "Introduction", 
+      parentLesson: "French Colonial Era (1863–1953)",
+      description: "The French Colonial Era was an important period in Cambodian history..."
+    },
+    { 
+      id: 2, 
+      title: "Conclusion", 
+      parentLesson: "French Colonial Era (1863–1953)",
+      description: "In conclusion, the era left a lasting impact on modern Cambodia."
+    },
+  ]);
+
+  // HANDLERS
+  const handleEditSubLesson = (lesson: SubLesson) => {
+    setCurrentSubLesson(lesson);
+    setView("edit-sublesson");
+  };
+
+  const handleBackToMain = () => {
+    setCurrentSubLesson(null);
+    setView("main");
+  };
+
+  const handleCreateLesson = (newLessonData: any) => {
+    // In a real app, you would send this to your API
+    const newId = subLessons.length + 1;
+    const newLesson: SubLesson = {
+      id: newId,
+      title: newLessonData.title,
+      parentLesson: lessonTitle,
+      description: newLessonData.description
+    };
+    setSubLessons([...subLessons, newLesson]);
+    setIsAddModalOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] px-10 py-8">
-      {/* Top bar */}
-      <div className="flex justify-between items-center mb-6">
-        <Link
-          href="/admin/admin-mock-exam"
-          className="text-sm text-gray-600 flex items-center gap-2"
-        >
-          ← Back to Exams
-        </Link>
+    <div className="min-h-screen bg-[#F9F9F9] px-6 py-8 sm:px-10 font-sans relative">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* ========================================================= */}
+        {/* VIEW 1: MAIN LESSON MANAGEMENT                            */}
+        {/* ========================================================= */}
+        {view === "main" && (
+          <>
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <Link
+                href="/admin/admin-lesson"
+                className="text-gray-600 hover:text-black font-medium flex items-center gap-2 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Lessons
+              </Link>
+              <button className="bg-[#E13030] text-white font-medium text-sm px-5 py-2.5 rounded-lg hover:bg-red-700 transition shadow-sm flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                Save Changes
+              </button>
+            </div>
 
-        <button className="bg-red-500 text-white text-sm px-5 py-2 rounded-lg hover:bg-red-600 transition">
-          💾 Save Changes
-        </button>
+            {/* Tabs */}
+            <div>
+              <div className="bg-gray-100 p-1.5 rounded-full inline-flex">
+                <Tab
+                  label="Lesson Details"
+                  active={activeTab === "details"}
+                  onClick={() => setActiveTab("details")}
+                />
+                <Tab
+                  label={`Lessons (${subLessons.length})`}
+                  active={activeTab === "lessons"}
+                  onClick={() => setActiveTab("lessons")}
+                />
+              </div>
+            </div>
+
+
+            {/* Content: Details */}
+            {activeTab === "details" && (
+              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Basic Information</h2>
+                  <p className="text-gray-500 text-sm mt-1">Configure course details and settings</p>
+                </div>
+                <div className="space-y-6 w-full">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Lesson Title</label>
+                    <input
+                      type="text"
+                      value={lessonTitle}
+                      onChange={(e) => setLessonTitle(e.target.value)}
+                      className="w-full bg-gray-50 hover:bg-gray-100 focus:bg-white border border-gray-200 focus:border-red-500 rounded-lg px-4 py-3 text-sm transition-all outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={lessonDescription}
+                      onChange={(e) => setLessonDescription(e.target.value)}
+                      placeholder="Describe what students will learn in this course..."
+                      rows={4}
+                      className="w-full bg-gray-50 hover:bg-gray-100 focus:bg-white border border-gray-200 focus:border-red-500 rounded-lg px-4 py-3 text-sm transition-all outline-none resize-none placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content: Lessons List */}
+            {activeTab === "lessons" && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex justify-between items-end mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1B1B3A]">Total Lessons</h3>
+                    <p className="text-sm text-gray-500 mt-1">{subLessons.length} lessons</p>
+                  </div>
+                  
+                  {/* ADD LESSON BUTTON - Triggers Modal */}
+                  <button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-[#E13030] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Lesson
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {subLessons.map((lesson, index) => (
+                    <SubLessonCard 
+                      key={lesson.id}
+                      index={index + 1}
+                      title={lesson.title}
+                      subtitle={lesson.parentLesson}
+                      onEdit={() => handleEditSubLesson(lesson)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+
+        {/* ========================================================= */}
+        {/* VIEW 2: EDIT SUB-LESSON                                   */}
+        {/* ========================================================= */}
+        {view === "edit-sublesson" && currentSubLesson && (
+          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+             <div className="flex justify-between items-center mb-6">
+              <button
+                onClick={handleBackToMain}
+                className="text-gray-600 hover:text-black font-medium flex items-center gap-2 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Lesson
+              </button>
+              <button className="bg-[#E13030] text-white font-medium text-sm px-5 py-2.5 rounded-lg hover:bg-red-700 transition shadow-sm flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                Save Changes
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+              <div className="mb-8 border-b border-gray-100 pb-4">
+                <h2 className="text-xl font-bold text-gray-900">Basic Information</h2>
+                <p className="text-gray-500 text-sm mt-1">Configure sub-lesson details</p>
+              </div>
+              <div className="space-y-6 w-full"> 
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Lesson Title</label>
+                  <input
+                    type="text"
+                    value={currentSubLesson.title}
+                    onChange={(e) => setCurrentSubLesson({...currentSubLesson, title: e.target.value})}
+                    className="w-full bg-gray-50 hover:bg-gray-100 focus:bg-white border border-gray-200 focus:border-red-500 rounded-lg px-4 py-3 text-sm transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                  <textarea
+                    value={currentSubLesson.description}
+                    onChange={(e) => setCurrentSubLesson({...currentSubLesson, description: e.target.value})}
+                    rows={12}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 leading-relaxed focus:border-red-500 focus:ring-1 focus:ring-red-100 transition-all outline-none resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-3 mb-6">
-        <Tab
-          label="Exam Details"
-          active={activeTab === "details"}
-          onClick={() => setActiveTab("details")}
-        />
-        <Tab
-          label="Questions (2)"
-          active={activeTab === "questions"}
-          onClick={() => setActiveTab("questions")}
-        />
-        <Tab
-          label="Settings"
-          active={activeTab === "settings"}
-          onClick={() => setActiveTab("settings")}
-        />
-      </div>
+      {/* ========================================================= */}
+      {/* COMPONENT: ADD LESSON MODAL                               */}
+      {/* ========================================================= */}
+      <AddLessonModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleCreateLesson}
+      />
 
-      {/* Questions Header */}
-      <div className="flex justify-between items-center mb-4 max-w-5xl">
-        <div>
-          <h3 className="text-base font-semibold text-[#1B1B3A]">
-            Exam Questions
-          </h3>
-          <p className="text-sm text-gray-500">Total Points: 3</p>
-        </div>
-
-        <button className="bg-red-500 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-600 transition">
-          + Add Question
-        </button>
-      </div>
-
-      {/* Questions List */}
-      <div className="space-y-6 max-w-5xl">
-        {/* Question 1 */}
-        <QuestionCard
-          index={1}
-          type="Multiple Choice"
-          points={2}
-          question="When did World War II begin?"
-          options={[
-            { label: "A", text: "1937", correct: false },
-            { label: "B", text: "1939", correct: true },
-            { label: "C", text: "1941", correct: false },
-            { label: "D", text: "1943", correct: false },
-          ]}
-        />
-
-        {/* Question 2 */}
-        <QuestionCard
-          index={2}
-          type="True/False"
-          points={1}
-          question="Lon Nol led Khmer Republic Era (1970–1975)"
-          options={[
-            { label: "A", text: "True", correct: true },
-            { label: "B", text: "False", correct: false },
-          ]}
-        />
-      </div>
     </div>
   );
 }
 
-/* ---------- Components ---------- */
+/* -------------------------------------------------------------------------- */
+/* SUB-COMPONENTS                                                             */
+/* -------------------------------------------------------------------------- */
 
-function Tab({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+// 1. Tab Component
+function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void; }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-sm rounded-full border transition ${
+      className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
         active
-          ? "bg-white shadow font-medium"
-          : "bg-gray-100 text-gray-600"
+          ? "bg-white text-gray-900 shadow-sm"
+          : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
       }`}
     >
       {label}
@@ -119,61 +267,114 @@ function Tab({
   );
 }
 
-function QuestionCard({
-  index,
-  type,
-  points,
-  question,
-  options,
-}: {
-  index: number;
-  type: string;
-  points: number;
-  question: string;
-  options: { label: string; text: string; correct: boolean }[];
-}) {
-  return (
-    <div className="bg-white rounded-2xl shadow p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-red-100 text-red-600 text-sm flex items-center justify-center font-semibold">
-            {index}
-          </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-gray-100">
-            {type}
-          </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-gray-100">
-            {points} point{points > 1 && "s"}
-          </span>
-        </div>
 
-        <div className="flex gap-3 text-gray-500">
-          <FaEdit className="cursor-pointer hover:text-red-500" />
-          <FaTrash className="cursor-pointer hover:text-red-500" />
+// 2. Lesson Card Component
+function SubLessonCard({ index, title, subtitle, onEdit }: { index: number; title: string; subtitle: string; onEdit: () => void; }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:border-red-100 transition-colors flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 text-red-600 font-bold text-lg">
+          {index}
+        </span>
+        <div>
+          <h3 className="text-base font-bold text-gray-900">{title}</h3>
+          <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
         </div>
       </div>
+      <div className="flex gap-2">
+        <button onClick={onEdit} className="p-2 text-gray-400 hover:text-gray-600 transition rounded-lg hover:bg-gray-50">
+          <Pencil size={18} />
+        </button>
+        <button className="p-2 text-gray-400 hover:text-red-600 transition rounded-lg hover:bg-red-50">
+          <Trash2 size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
-      {/* Question */}
-      <p className="text-sm font-medium mb-4">{question}</p>
+// 3. Add Lesson Modal Component (NEW)
+function AddLessonModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: (data: any) => void }) {
+  if (!isOpen) return null;
 
-      {/* Options */}
-      <div className="space-y-2">
-        {options.map((opt) => (
-          <div
-            key={opt.label}
-            className={`px-4 py-2 rounded-lg text-sm border ${
-              opt.correct
-                ? "bg-green-50 border-green-400 text-green-700"
-                : "bg-gray-50"
-            }`}
-          >
-            {opt.label}. {opt.text}
-            {opt.correct && (
-              <span className="ml-2 text-xs font-medium">✓ Correct</span>
-            )}
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = () => {
+    onSave({ title, description });
+    setTitle("");
+    setDescription("");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        
+        {/* Modal Header */}
+        <div className="px-6 py-4 flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-bold text-red-600">Add New Lesson</h3>
+            <p className="text-sm text-gray-500 mt-1">Add a new lesson to your platform</p>
           </div>
-        ))}
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="px-6 py-2 space-y-4">
+          
+          {/* Title Input */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Lesson Title</label>
+            <input 
+              type="text" 
+              placeholder="e.g., Khmer Rouge"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:border-red-500 outline-none transition-all placeholder:text-gray-400"
+            />
+          </div>
+
+          {/* Description Input */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+            <textarea 
+              rows={3}
+              placeholder="Brief description of the course"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:border-red-500 outline-none transition-all resize-none placeholder:text-gray-400"
+            />
+          </div>
+
+          {/* File Upload Area */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Course Documentation</label>
+            <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+              <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 flex gap-3 mt-2">
+          <button 
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleSubmit}
+            className="flex-1 px-4 py-2.5 bg-[#E13030] text-white text-sm font-medium rounded-lg hover:bg-red-700 transition shadow-sm"
+          >
+            Create Lesson
+          </button>
+        </div>
+
       </div>
     </div>
   );

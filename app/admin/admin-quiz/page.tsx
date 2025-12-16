@@ -2,19 +2,20 @@
 import QuizCard from "@/components/QuizCard";
 import Image from "next/image";
 import Link from "next/link";
-import { FaTrashAlt } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import CreateQuizModal from "@/components/CreateQuizModal";
 
+// Added IDs to simulate database items
 const quizzes = [
-  { title: "Khmer Rouge – True/False question" },
-  { title: "Khmer Republic Era – True/False" },
-  { title: "French Colonial Era – Multiple Choice" },
+  { id: 1, title: "Khmer Rouge – True/False question" },
+  { id: 2, title: "Khmer Republic Era – True/False" },
+  { id: 3, title: "French Colonial Era – Multiple Choice" },
 ];
 
 export default function AdminQuizPage() {
-  // ✅ STATE MUST LIVE HERE
   const [openQuizModal, setOpenQuizModal] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
@@ -57,25 +58,24 @@ export default function AdminQuizPage() {
 
           {/* Quiz cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-12 justify-items-center">
-            {quizzes.map((quiz, index) => (
+            {quizzes.map((quiz) => (
               <QuizCard
-                key={index}
+                key={quiz.id}
                 title={quiz.title}
-                onEdit={() => setOpenQuizModal(true)}
+                // FIXED: Navigates to the edit page instead of opening the create modal
+                onEdit={() => router.push(`/admin/admin-quiz/${quiz.id}`)}
               />
             ))}
           </div>
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="bg-[#C1282D] text-white text-center py-10 mt-auto">
         <p className="text-xs">
           Empowering learners to grow their skills anytime, anywhere.
         </p>
       </footer>
 
-      {/* ✅ MODAL MUST BE HERE */}
       <CreateQuizModal
         isOpen={openQuizModal}
         onClose={() => setOpenQuizModal(false)}

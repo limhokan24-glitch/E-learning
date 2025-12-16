@@ -35,7 +35,7 @@ export default function AdminMockExamPage() {
           <Link href="/admin/admin-lesson">Lesson</Link>
           <Link href="/admin/admin-quiz">Quiz</Link>
           <Link
-            href="/admin/admin-mock-exam"
+            href="/admin/admin-mock"
             className="font-semibold text-red-500"
           >
             Mock Exam

@@ -47,7 +47,7 @@ export default function AdminLessonPage() {
             Lesson
           </Link>
           <Link href="/admin/admin-quiz">Quiz</Link>
-          <Link href="/admin/admin-mock-exam">Mock Exam</Link>
+          <Link href="/admin/admin-mock">Mock Exam</Link>
           <Link href="/admin/admin-subscription">Subscription</Link>
         </nav>
 
