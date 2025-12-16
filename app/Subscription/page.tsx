@@ -51,7 +51,7 @@ export default function SubscriptionPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to cancel subscription");
+      if (!res.ok) throw new Error("Failed to cancel Subscription");
 
       // Refresh token to update UI
       await user.getIdToken(true);
@@ -59,7 +59,7 @@ export default function SubscriptionPage() {
       window.location.reload();
     } catch (error) {
       console.error(error);
-      alert("Error cancelling subscription.");
+      alert("Error cancelling Subscription.");
     }
   };
 
@@ -75,7 +75,7 @@ export default function SubscriptionPage() {
           <Link href="/quiz">Quiz</Link>
           <Link href="/mock-exam">Mock Exam</Link>
           <Link href="/progress">Progress</Link>
-          <Link href="/subscription" className="font-semibold text-red-500">
+          <Link href="/Subscription" className="font-semibold text-red-500">
             Subscription
           </Link>
         </nav>

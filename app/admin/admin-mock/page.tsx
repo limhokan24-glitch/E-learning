@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FaTrashAlt } from "react-icons/fa";
+import { useState } from "react";
+import CreateMockExamModal from "@/components/CreateMockExamModal";
 
 const mockExams = [
   {
@@ -20,6 +22,8 @@ const mockExams = [
 ];
 
 export default function AdminMockExamPage() {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
       {/* Header */}
@@ -27,13 +31,16 @@ export default function AdminMockExamPage() {
         <Image src="/logo.jpg" alt="Logo" width={50} height={50} />
 
         <nav className="flex space-x-6 text-sm">
-          <Link href="/admin-dashboard">Admin Dashboard</Link>
-          <Link href="/admin-lesson">Lesson</Link>
-          <Link href="/admin-quiz">Quiz</Link>
-          <Link href="/mock-exam" className="font-semibold text-red-500">
+          <Link href="/admin/admin-dashboard">Admin Dashboard</Link>
+          <Link href="/admin/admin-lesson">Lesson</Link>
+          <Link href="/admin/admin-quiz">Quiz</Link>
+          <Link
+            href="/admin/admin-mock-exam"
+            className="font-semibold text-red-500"
+          >
             Mock Exam
           </Link>
-          <Link href="/admin-subscription">Subscription</Link>
+          <Link href="/admin/admin-subscription">Subscription</Link>
         </nav>
 
         <form action="/api/auth/signout" method="post">
@@ -57,7 +64,10 @@ export default function AdminMockExamPage() {
               </p>
             </div>
 
-            <button className="flex items-center space-x-2 bg-red-500 text-white text-sm px-6 py-2 rounded-full shadow-md hover:bg-red-600 transition mt-2">
+            <button
+              onClick={() => setOpen(true)}
+              className="flex items-center space-x-2 bg-red-500 text-white text-sm px-6 py-2 rounded-full shadow-md hover:bg-red-600 transition mt-2"
+            >
               <span className="text-lg">+</span>
               <span>Create Mock Exam</span>
             </button>
@@ -82,6 +92,7 @@ export default function AdminMockExamPage() {
           </div>
         </section>
       </main>
+      {open && <CreateMockExamModal onClose={() => setOpen(false)} />}
 
       {/* Footer */}
       <footer className="bg-[#C1282D] text-white text-center py-10 mt-auto">
@@ -135,9 +146,12 @@ function MockExamCard({
       </div>
 
       <div className="flex items-center justify-center gap-4">
-        <button className="bg-red-500 text-white text-sm px-6 py-2 rounded-full hover:bg-red-600 transition">
+        <Link
+          href={`/admin/admin-mock/edit/1`}
+          className="bg-red-500 text-white text-sm px-6 py-2 rounded-full hover:bg-red-600 transition"
+        >
           Edit
-        </button>
+        </Link>
         <button
           className="text-red-500 hover:text-red-600 hover:scale-110 transition"
           aria-label="Delete mock exam"

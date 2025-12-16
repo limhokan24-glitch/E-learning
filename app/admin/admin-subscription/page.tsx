@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
+import { useState } from "react";
+import StudentDetailModal from "@/components/StudentDetailModal";
 const recentSubscriptions = [
   {
     name: "March Lyhour",
@@ -22,6 +23,8 @@ const recentSubscriptions = [
 ];
 
 export default function AdminSubscriptionPage() {
+  const [openStudentDetail, setOpenStudentDetail] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
       {/* Header */}
@@ -29,12 +32,12 @@ export default function AdminSubscriptionPage() {
         <Image src="/logo.jpg" alt="Logo" width={50} height={50} />
 
         <nav className="flex space-x-6 text-sm">
-          <Link href="/admin-dashboard">Admin Dashboard</Link>
-          <Link href="/admin-lesson">Lesson</Link>
-          <Link href="/admin-quiz">Quiz</Link>
-          <Link href="/mock-exam">Mock Exam</Link>
+          <Link href="/admin/admin-dashboard">Admin Dashboard</Link>
+          <Link href="/admin/admin-lesson">Lesson</Link>
+          <Link href="/admin/admin-quiz">Quiz</Link>
+          <Link href="/admin/admin-mock">Mock Exam</Link>
           <Link
-            href="/admin-subscription"
+            href="/admin/admin-subscription"
             className="font-semibold text-red-500"
           >
             Subscription
@@ -61,9 +64,21 @@ export default function AdminSubscriptionPage() {
 
           {/* Top cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-10 justify-items-center">
-            <StatCard title="Total Student" value="10" iconSrc="/student-icon.png" />
-            <StatCard title="Premium Users" value="8" iconSrc="/crown-icon.png" />
-            <StatCard title="Monthly Revenue" value="$80" iconSrc="/money-icon.png" />
+            <StatCard
+              title="Total Student"
+              value="10"
+              iconSrc="/student.png"
+            />
+            <StatCard
+              title="Premium Users"
+              value="10"
+              iconSrc="/student.png"
+            />
+            <StatCard
+              title="Monthly Revenue"
+              value="10"
+              iconSrc="/student.png"
+            />
           </div>
 
           {/* Recent Subscriptions header */}
@@ -76,7 +91,10 @@ export default function AdminSubscriptionPage() {
                 Latest students joining or upgrading plans
               </p>
             </div>
-            <button className="bg-red-500 text-white text-sm px-6 py-2 rounded-full shadow-md hover:bg-red-600 transition">
+            <button
+              onClick={() => setOpenStudentDetail(true)}
+              className="bg-red-500 text-white text-sm px-6 py-2 rounded-full shadow-md hover:bg-red-600 transition"
+            >
               View Student Detail
             </button>
           </div>
@@ -107,6 +125,9 @@ export default function AdminSubscriptionPage() {
               </div>
             ))}
           </div>
+          {openStudentDetail && (
+            <StudentDetailModal onClose={() => setOpenStudentDetail(false)} />
+          )}
         </section>
       </main>
 
